@@ -15,6 +15,12 @@ language_level = Table(
     Column('name_en_id', Integer, ForeignKey('name_en.id'))
 )
 
+learning_word = Table(
+    'word_to_user', Base.metadata,
+    Column('name_en_id', Integer, ForeignKey('name_en.id')),
+    Column('user_id', Integer, ForeignKey('users.id'))
+)
+
 
 class NameRu(Base):
     __tablename__ = 'name_ru'
@@ -29,12 +35,24 @@ class NameRu(Base):
         )
     )
 
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return f'{__class__.name}: {self.name}'
+
 
 class NameEn(Base):
     __tablename__ = 'name_en'
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return f'{__class__.name}: {self.name}'
 
 
 class Level(Base):
@@ -48,6 +66,29 @@ class Level(Base):
         backref=backref(
             'level'
         )
+    )
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return f'{__class__.name}: {self.name}'
+
+
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    level_id = Column(Integer, ForeignKey('language_level.id'))
+    level = relationship(
+        'Level',
+        backref=backref('user')
+    )
+    words = relationship(
+        'NameEn',
+        secondary=learning_word,
+        backref=backref('words')
     )
 
 
