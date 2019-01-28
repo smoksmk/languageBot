@@ -106,3 +106,4 @@ ENV/
 #Logs
 logs/
 logs/*
+/config.json
