@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Table, Integer, ForeignKey, String
+from sqlalchemy import Column, Table, Integer, ForeignKey, String, DateTime, func
 from sqlalchemy.orm import relationship, backref
 
 from app.db import Base, engine
@@ -18,7 +18,9 @@ language_level = Table(
 learning_word = Table(
     'word_to_user', Base.metadata,
     Column('name_en_id', Integer, ForeignKey('name_en.id')),
-    Column('user_id', Integer, ForeignKey('users.id'))
+    Column('user_id', Integer, ForeignKey('users.id')),
+    Column('time_create', DateTime, server_default=func.now()),
+    Column('time_update', DateTime, onupdate=func.now())
 )
 
 
@@ -81,6 +83,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     level_id = Column(Integer, ForeignKey('language_level.id'))
+    source_system_id = Column(Integer, ForeignKey('source_system.id'))
     level = relationship(
         'Level',
         backref=backref('user')
@@ -88,9 +91,20 @@ class User(Base):
     words = relationship(
         'NameEn',
         secondary=learning_word,
-        backref=backref('words')
+        backref=backref('user')
+    )
+    source_system = relationship(
+        'SourceSystem',
+        backref=backref('user')
     )
 
 
-if __name__ == "__main__":
-    Base.metadata.create_all(engine)
+class SourceSystem(Base):
+    __tablename__ = 'source_system'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+
+# if __name__ == "__main__":
+#     Base.metadata.create_all(engine)

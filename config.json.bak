@@ -1,0 +1,15 @@
+{
+  "DEFAULT": {
+    "APPLICATION_NAME": "account_charges",
+    "DEBUG": false,
+
+  },
+  "LOCAL": {
+    "ENVIRONMENT": "local",
+
+  },
+  "DEV": {
+    "ENVIRONMENT": "dev"
+  },
+  "PROD": "prod"
+}

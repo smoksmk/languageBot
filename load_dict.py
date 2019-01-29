@@ -1,39 +1,47 @@
-from app.db import session
-from models.models import NameEn, NameRu, Level
+from app.db import session_scope
+# from models.models import NameEn, NameRu, Level
 from data.read import parse_en_to_ru, load_elementary
+from models.controller import Dictionary
 
 
-def translate_ru(word):
-    res = session.query(NameRu).filter_by(name=word).all()
-    for word in res:
-        for word2 in word.name_en:
-            print(word.name, word2.name)
+with session_scope() as session:
+    d = Dictionary(session)
+    level = d.get_level('elementary')
+    print(level, dir(level))
 
 
-def translate_en(word):
-    res = session.query(NameEn).filter_by(name=word).all()
-    for word in res:
-        for word2 in word.name_ru:
-            print(word.name, word2.name)
 
-
-level = session.query(Level).filter_by(name='elementary').one()
-
-for name_en, name_ru in load_elementary():
-    en = session.query(NameEn).filter_by(name=name_en.lower()).first()
-    if en:
-        en.level.append(level)
-        session.add(en)
-    else:
-        print("Добовляем новое слово")
-        word_en = NameEn(name=name_en)
-        word_ru = NameRu(name=name_ru)
-        word_en.level.append(level)
-        word_en.name_ru.append(word_ru)
-        session.add(word_en)
-        session.add(word_ru)
-
-    session.commit()
+# def translate_ru(word):
+#     res = session.query(NameRu).filter_by(name=word).all()
+#     for word in res:
+#         for word2 in word.name_en:
+#             print(word.name, word2.name)
+#
+#
+# def translate_en(word):
+#     res = session.query(NameEn).filter_by(name=word).all()
+#     for word in res:
+#         for word2 in word.name_ru:
+#             print(word.name, word2.name)
+#
+#
+# level = session.query(Level).filter_by(name='elementary').one()
+#
+# for name_en, name_ru in load_elementary():
+#     en = session.query(NameEn).filter_by(name=name_en.lower()).first()
+#     if en:
+#         en.level.append(level)
+#         session.add(en)
+#     else:
+#         print("Добовляем новое слово")
+#         word_en = NameEn(name=name_en)
+#         word_ru = NameRu(name=name_ru)
+#         word_en.level.append(level)
+#         word_en.name_ru.append(word_ru)
+#         session.add(word_en)
+#         session.add(word_ru)
+#
+#     session.commit()
     # print(en, name_en, name_ru)
     # print(i)
 

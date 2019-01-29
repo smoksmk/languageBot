@@ -107,3 +107,4 @@ ENV/
 logs/
 logs/*
 /config.json
+/database.sqlite
