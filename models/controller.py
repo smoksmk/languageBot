@@ -1,49 +1,68 @@
 import random
 
-from models.models import NameEn, NameRu, Level
+from sqlalchemy import func
+from sqlalchemy.orm.exc import NoResultFound
+
+from app.db import session_scope
+from languageBot.models.models import NameEnModel, NameRuModel, LevelModel, UserModel
 
 
-class Dictionary:
-    def __init__(self, session):
-        self.session = session
+def get_random_word(session, name=None):
+    word = session.query(NameEnModel)
+    if name:
+        word = word.filter(LevelModel.name == name)\
+            .join(NameEnModel.level)
 
-    def get_count_word(self, level=None):
-        count = self.session.query(NameEn)
-        if level:
-            count.filter(Level.id == level.id)
-
-        return count.count()
-
-    def get_level(self, name):
-        return self.session.query(Level).filter_by(name=name).one()
-
-    def get_random_word(self, level=None):
-        count_word = self.get_count_word(level)
-        word_id = random.randint(1, count_word)
-        word = self.session.query(NameEn)\
-            .filter_by(id=word_id)
-
-        if level:
-            word.filter(Level == level)
-
-        result = word.first()
-        return result.name, result.name_ru
-
-    def get_translate_en_to_ru(self, word):
-        return self.session.query(NameEn).filter_by(name=word).first()
-
-    def get_translate_ru_to_en(self, word):
-        return self.session.query(NameRu).filter_by(name=word).first()
+    return word.order_by(func.random()).first()
 
 
-class Learning:
+def save_word_to_user(session, word: NameEnModel, user_id: int):
+    user = session.query(UserModel).filter_by(id=user_id).one()
+    user.words.append(word)
+    session.add(user)
+    session.commit()
 
-    def __init__(self, User):
-        self._user = User
 
-    def get_word(self, word):
-        pass
+def get_random_learning_word(session, user_id, limit=10):
+    return session.query(NameEnModel)\
+        .filter(UserModel.id == user_id)\
+        .join(UserModel.words)\
+        .order_by(func.random())\
+        .limit(limit).all()
 
-    def set_answer(self, word):
-        pass
+
+def get_translate_en_to_ru(session, word):
+    return session.query(NameEnModel).filter_by(name=word).first()
+
+
+def get_translate_ru_to_en(session, word):
+    return session.query(NameRuModel).filter_by(name=word).first()
+
+
+def save_user(session, data, source_system, level):
+    user = UserModel()
+    user.name = data.id
+    user.source_system_id = source_system
+    user.level = level
+    user.fullname = f'{data.first_name} {data.last_name}'
+    session.add(user)
+    session.commit()
+    return user
+
+
+def get_user_id(session, data, source_system):
+    try:
+        return session.query(UserModel).filter_by(name=data.id, source_system_id=source_system).one().id
+    except NoResultFound:
+        level = session.query(LevelModel).filter_by(name='elementary').one().id
+        return save_user(session, data, source_system, level)
+
+
+def get_user_by_id(session, user_id):
+    return session.query(UserModel).filter_by(id=user_id).one()
+
+
+if __name__ == '__main__':
+    with session_scope() as session:
+        print(get_random_learning_word(session, 2))
 

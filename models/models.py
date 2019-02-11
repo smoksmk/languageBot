@@ -24,12 +24,13 @@ learning_word = Table(
 )
 
 
-class NameRu(Base):
+class NameRuModel(Base):
     __tablename__ = 'name_ru'
+
     id = Column(Integer, primary_key=True)
     name = Column(String)
     name_en = relationship(
-        "NameEn",
+        "NameEnModel",
         secondary=ru_to_en,
         backref=backref(
             'name_ru',
@@ -37,6 +38,9 @@ class NameRu(Base):
         )
     )
 
+    def name_en_dict(self):
+        return [word.name for word in self.name_en]
+
     def __str__(self):
         return self.name
 
@@ -44,12 +48,15 @@ class NameRu(Base):
         return f'{__class__.name}: {self.name}'
 
 
-class NameEn(Base):
+class NameEnModel(Base):
     __tablename__ = 'name_en'
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
 
+    def name_ru_dict(self):
+        return [word.name for word in self.name_ru]
+
     def __str__(self):
         return self.name
 
@@ -57,13 +64,13 @@ class NameEn(Base):
         return f'{__class__.name}: {self.name}'
 
 
-class Level(Base):
+class LevelModel(Base):
     __tablename__ = 'language_level'
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
     level = relationship(
-        'NameEn',
+        'NameEnModel',
         secondary=language_level,
         backref=backref(
             'level'
@@ -77,34 +84,35 @@ class Level(Base):
         return f'{__class__.name}: {self.name}'
 
 
-class User(Base):
+class UserModel(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String(255))
+    fullname = Column(String(255))
     level_id = Column(Integer, ForeignKey('language_level.id'))
     source_system_id = Column(Integer, ForeignKey('source_system.id'))
     level = relationship(
-        'Level',
+        'LevelModel',
         backref=backref('user')
     )
     words = relationship(
-        'NameEn',
+        'NameEnModel',
         secondary=learning_word,
         backref=backref('user')
     )
     source_system = relationship(
-        'SourceSystem',
+        'SourceSystemModel',
         backref=backref('user')
     )
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}: {self.name} -> {self.fullname}'
 
-class SourceSystem(Base):
+
+class SourceSystemModel(Base):
     __tablename__ = 'source_system'
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
 
-
-# if __name__ == "__main__":
-#     Base.metadata.create_all(engine)
